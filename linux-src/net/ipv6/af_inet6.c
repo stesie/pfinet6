@@ -337,6 +337,10 @@ static int inet6_getname(struct socket *sock, struct sockaddr *uaddr,
 	return(0);
 }
 
+#ifdef _HURD_
+#define inet6_ioctl 0
+#else
+
 static int inet6_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 {
 	struct sock *sk = sock->sk;
@@ -395,6 +399,8 @@ static int inet6_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 	/*NOTREACHED*/
 	return(0);
 }
+
+#endif /* not _HURD_ */
 
 struct proto_ops inet6_stream_ops = {
 	PF_INET6,
