@@ -808,6 +808,7 @@ ok:
 	}
 }
 
+#ifndef _HURD_
 /*
  *	Set destination address.
  *	Special case for SIT interfaces where we create a new "virtual"
@@ -865,6 +866,7 @@ err_exit:
 	rtnl_unlock();
 	return err;
 }
+#endif /* not _HURD_ */
 
 /*
  *	Manual configuration of address on an interface
