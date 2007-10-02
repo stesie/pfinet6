@@ -79,7 +79,9 @@ static int udp_v6_get_port(struct sock *sk, unsigned short snum)
 			} while ((sk = sk->next) != NULL);
 			best_size_so_far = size;
 			best = result;
+
 		next:
+			(void) 0;
 		}
 		result = best;
 		for(;; result += UDP_HTABLE_SIZE) {

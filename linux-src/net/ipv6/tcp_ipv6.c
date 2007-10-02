@@ -103,7 +103,10 @@ static int tcp_v6_get_port(struct sock *sk, unsigned short snum)
 				if (tb->port == rover)
 					goto next;
 			break;
+
 		next:
+			(void) 0;
+
 		} while (--remaining > 0);
 		tcp_port_rover = rover;
 
@@ -1426,6 +1429,7 @@ int tcp_v6_rcv(struct sk_buff *skb, unsigned long len)
 		}
 	default:
 		/* CHECKSUM_UNNECESSARY */
+		break;
 	};
 
 	if((th->doff * 4) < sizeof(struct tcphdr) ||
