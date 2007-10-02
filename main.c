@@ -224,6 +224,7 @@ enumerate_devices (error_t (*fun) (struct device *dev))
 
 extern void sk_init (void), skb_init (void);
 extern int net_dev_init (void);
+extern void inet6_proto_init (struct net_proto *pro);
 
 int
 main (int argc,
@@ -257,6 +258,10 @@ main (int argc,
   skb_init ();
 #endif
   inet_proto_init (0);
+
+#ifdef CONFIG_IPV6
+  inet6_proto_init (0);
+#endif
 
   /* This initializes the Linux network device layer, including
      initializing each device on the `dev_base' list.  For us,
