@@ -892,6 +892,10 @@ static struct inet6_protocol udpv6_protocol =
 	"UDPv6"			/* name			*/
 };
 
+#ifdef _HURD_
+#define udp_ioctl 0
+#endif
+
 struct proto udpv6_prot = {
 	(struct sock *)&udpv6_prot,	/* sklist_next */
 	(struct sock *)&udpv6_prot,	/* sklist_prev */
