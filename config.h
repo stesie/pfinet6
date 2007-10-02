@@ -7,6 +7,7 @@
 
 #define CONFIG_NET 1
 #define CONFIG_INET 1
+#define CONFIG_IPV6 1
 
 #undef  CONFIG_IPX
 #undef  CONFIG_ATALK
