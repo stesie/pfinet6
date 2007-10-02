@@ -548,7 +548,9 @@ __initfunc(void inet6_proto_init(struct net_proto *pro))
 	ip6_route_init();
 	ip6_flowlabel_init();
 	addrconf_init();
+#ifndef _HURD_
 	sit_init();
+#endif
 
 	/* Init v6 transport protocols. */
 	udpv6_init();
