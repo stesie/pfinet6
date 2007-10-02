@@ -58,7 +58,9 @@ ipv4-srcs	:= af_inet.c						      \
 		   timer.c						      \
 		   udp.c						      \
 		   utils.c
-ipv6-srcs      :=  af_inet6.c
+ipv6-srcs      :=  af_inet6.c						      \
+		   tcp_ipv6.c						      \
+		   udp_ipv6.c
 LINUXSRCS	= $(core-srcs) $(ethernet-srcs) $(ipv4-srcs) $(ipv6-srcs) \
 		  $(notdir $(wildcard $(addprefix \
 			   $(srcdir)/linux-src/arch/$(asm_syntax)/lib/,\
