@@ -58,7 +58,8 @@ ipv4-srcs	:= af_inet.c						      \
 		   timer.c						      \
 		   udp.c						      \
 		   utils.c
-LINUXSRCS	= $(core-srcs) $(ethernet-srcs) $(ipv4-srcs) \
+ipv6-srcs      :=  af_inet6.c
+LINUXSRCS	= $(core-srcs) $(ethernet-srcs) $(ipv4-srcs) $(ipv6-srcs) \
 		  $(notdir $(wildcard $(addprefix \
 			   $(srcdir)/linux-src/arch/$(asm_syntax)/lib/,\
 			   $(arch-lib-srcs) $(arch-lib-srcs:.c=.S))))
@@ -87,7 +88,7 @@ target = pfinet6
 
 include ../Makeconf
 
-vpath %.c $(addprefix $(srcdir)/linux-src/net/,core ethernet ipv4)
+vpath %.c $(addprefix $(srcdir)/linux-src/net/,core ethernet ipv4 ipv6)
 vpath %.c $(srcdir)/linux-src/arch/$(asm_syntax)/lib
 vpath %.S $(srcdir)/linux-src/arch/$(asm_syntax)/lib
 
