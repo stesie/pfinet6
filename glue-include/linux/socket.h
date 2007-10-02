@@ -22,6 +22,7 @@
 
 #define SOL_IP IPPROTO_IP
 #define SOL_TCP IPPROTO_TCP
+#define SOL_IPV6 IPPROTO_IPV6
 #define SOL_RAW IPPROTO_RAW
 
 /* IP options */
