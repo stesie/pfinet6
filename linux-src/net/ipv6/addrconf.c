@@ -934,6 +934,7 @@ static int inet6_addr_del(int ifindex, struct in6_addr *pfx, int plen)
 }
 
 
+#ifndef _HURD_
 int addrconf_add_ifaddr(void *arg)
 {
 	struct in6_ifreq ireq;
@@ -950,7 +951,9 @@ int addrconf_add_ifaddr(void *arg)
 	rtnl_unlock();
 	return err;
 }
+#endif /* not _HURD_ */
 
+#ifndef _HURD_
 int addrconf_del_ifaddr(void *arg)
 {
 	struct in6_ifreq ireq;
@@ -967,6 +970,7 @@ int addrconf_del_ifaddr(void *arg)
 	rtnl_unlock();
 	return err;
 }
+#endif /* not _HURD_ */
 
 static void sit_add_v4_addrs(struct inet6_dev *idev)
 {
