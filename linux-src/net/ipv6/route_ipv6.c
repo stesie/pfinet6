@@ -1156,6 +1156,7 @@ restart:
 	}
 }
 
+#ifndef _HURD_
 int ipv6_route_ioctl(unsigned int cmd, void *arg)
 {
 	struct in6_rtmsg rtmsg;
@@ -1194,6 +1195,7 @@ int ipv6_route_ioctl(unsigned int cmd, void *arg)
 
 	return -EINVAL;
 }
+#endif /* not _HURD_ */
 
 /*
  *	Drop the packet on the floor
