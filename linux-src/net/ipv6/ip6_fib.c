@@ -94,7 +94,7 @@ static struct timer_list ip6_fib_timer = {
 	fib6_run_gc
 };
 
-static struct fib6_walker_t fib6_walker_list = {
+struct fib6_walker_t fib6_walker_list = {
 	&fib6_walker_list, &fib6_walker_list, 
 };
 
