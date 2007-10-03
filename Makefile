@@ -61,10 +61,19 @@ ipv4-srcs	:= af_inet.c						      \
 ipv6-srcs      :=  addrconf.c						      \
 		   af_inet6.c						      \
 		   datagram_ipv6.c					      \
+		   exthdrs.c						      \
+		   icmpv6.c						      \
 		   ip6_fib.c      					      \
 		   ip6_flowlabel.c					      \
 		   ip6_input.c    					      \
 		   ip6_output.c   					      \
+		   ipv6_sockglue.c					      \
+		   mcast.c						      \
+		   ndisc.c						      \
+		   protocol_ipv6.c					      \
+		   raw_ipv6.c						      \
+		   reassembly.c						      \
+		   route_ipv6.c						      \
 		   tcp_ipv6.c						      \
 		   udp_ipv6.c
 LINUXSRCS	= $(core-srcs) $(ethernet-srcs) $(ipv4-srcs) $(ipv6-srcs) \
