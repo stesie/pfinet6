@@ -601,8 +601,10 @@ int __init icmpv6_init(struct net_proto_family *ops)
 		       "Failed to create the ICMP6 control socket.\n");
 		return -1;
 	}
+#ifndef _HURD_
 	icmpv6_socket->inode->i_uid = 0;
 	icmpv6_socket->inode->i_gid = 0;
+#endif
 	icmpv6_socket->type = SOCK_RAW;
 
 	if ((err = ops->create(icmpv6_socket, IPPROTO_ICMPV6)) < 0) {

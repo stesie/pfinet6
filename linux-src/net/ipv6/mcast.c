@@ -671,8 +671,10 @@ __initfunc(int igmp6_init(struct net_proto_family *ops))
 		       "Failed to create the IGMP6 control socket.\n");
 		return -1;
 	}
+#ifndef _HURD_
 	igmp6_socket->inode->i_uid = 0;
 	igmp6_socket->inode->i_gid = 0;
+#endif
 	igmp6_socket->type = SOCK_RAW;
 
 	if((err = ops->create(igmp6_socket, IPPROTO_ICMPV6)) < 0) {
