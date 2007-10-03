@@ -499,6 +499,7 @@ int icmpv6_rcv(struct sk_buff *skb, unsigned long len)
 		}
 	default:
 		/* CHECKSUM_UNNECESSARY */
+		break;
 	};
 
 	/*
