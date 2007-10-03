@@ -3,6 +3,21 @@
 
 #include <netinet/in.h>
 
+#if 0
+struct ipv6_mreq {
+	/* IPv6 multicast address of group */
+	struct in6_addr ipv6mr_multiaddr;
+
+	/* local IPv6 address of interface */
+	int		ipv6mr_ifindex;
+};
+#endif
+
+/* In Linux's struct ipv6_mreq the second member is called ipv6mr_ifindex,
+ * however it's called ipv6mr_interface in ours.
+ */
+#define ipv6mr_ifindex ipv6mr_interface
+
 struct in6_flowlabel_req
 {
 	struct in6_addr	flr_dst;
@@ -87,5 +102,9 @@ struct in6_flowlabel_req
 #define IPV6_PMTUDISC_DONT              0
 #define IPV6_PMTUDISC_WANT              1
 #define IPV6_PMTUDISC_DO                2
+
+/* Flowlabel */
+#define IPV6_FLOWLABEL_MGR	32
+#define IPV6_FLOWINFO_SEND	33
 
 #endif /* not GLUE_LINUX_IN6_H */
