@@ -36,7 +36,7 @@
 #undef CONFIG_IPV6_SUBTREES
 
 #if RT6_DEBUG >= 1
-#define BUG_TRAP(x) ({ if (!(x)) { printk("Assertion (" #x ") failed at " __FILE__ "(%d):" __FUNCTION__ "\n", __LINE__); } })
+#define BUG_TRAP(x) ({ if (!(x)) { printk("Assertion (" #x ") failed at " __FILE__ "(%d):%s\n", __LINE__, __FUNCTION__); } })
 #else
 #define BUG_TRAP(x) do { ; } while (0)
 #endif
