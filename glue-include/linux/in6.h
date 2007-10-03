@@ -1,4 +1,34 @@
+#ifndef GLUE_LINUX_IN6_H
+#define GLUE_LINUX_IN6_H 1
+
 #include <netinet/in.h>
+
+struct in6_flowlabel_req
+{
+	struct in6_addr	flr_dst;
+	__u32	flr_label;
+	__u8	flr_action;
+	__u8	flr_share;
+	__u16	flr_flags;
+	__u16 	flr_expires;
+	__u16	flr_linger;
+	__u32	__flr_pad;
+	/* Options in format of IPV6_PKTOPTIONS */
+};
+
+#define IPV6_FL_A_GET	0
+#define IPV6_FL_A_PUT	1
+#define IPV6_FL_A_RENEW	2
+
+#define IPV6_FL_F_CREATE	1
+#define IPV6_FL_F_EXCL		2
+
+#define IPV6_FL_S_NONE		0
+#define IPV6_FL_S_EXCL		1
+#define IPV6_FL_S_PROCESS	2
+#define IPV6_FL_S_USER		3
+#define IPV6_FL_S_ANY		255
+
 
 /*
  *	Bitmask constant declarations to help applications select out the 
@@ -58,3 +88,4 @@
 #define IPV6_PMTUDISC_WANT              1
 #define IPV6_PMTUDISC_DO                2
 
+#endif /* not GLUE_LINUX_IN6_H */
