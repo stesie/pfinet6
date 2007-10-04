@@ -1,6 +1,6 @@
 /* Pfinet option parsing
 
-   Copyright (C) 1996, 1997, 2000, 2001, 2006 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 2000, 2001, 2006, 2007 Free Software Foundation, Inc.
 
    Written by Miles Bader <miles@gnu.org>
 
@@ -60,6 +60,8 @@ static const struct argp_option options[] =
   {"netmask",   'm', "MASK",    0, "Set the netmask"},
   {"peer",      'p', "ADDRESS", 0, "Set the peer address"},
   {"gateway",   'g', "ADDRESS", 0, "Set the default gateway"},
+  {"ipv4",      '4', "NAME",    0, "Put active IPv4 translator on NAME"},
+  {"ipv6",      '6', "NAME",    0, "Put active IPv6 translator on NAME"},
   {"shutdown",  's', 0,         0, "Shut it down"},
   {0}
 };
@@ -195,6 +197,17 @@ parse_opt (int opt, char *arg, struct argp_state *state)
       h->curint->peer = ADDR (arg, "peer"); break;
     case 'g':
       h->curint->gateway = ADDR (arg, "gateway"); break;
+
+    case '4':
+      pfinet_bind (PORTCLASS_INET, arg);
+
+      /* Install IPv6 port class on bootstrap port. */
+      pfinet_bootstrap_portclass = PORTCLASS_INET6;
+      break;
+
+    case '6':
+      pfinet_bind (PORTCLASS_INET6, arg);
+      break;
 
     case ARGP_KEY_INIT:
       /* Initialize our parsing state.  */
