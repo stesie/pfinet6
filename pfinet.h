@@ -107,4 +107,7 @@ extern int trivfs_cntl_nportclasses;
 /* Which portclass to install on the bootstrap port. */
 extern int pfinet_bootstrap_portclass;
 
+/* Install portclass on node NAME. */
+void pfinet_bind (int portclass, const char *name);
+
 #endif

@@ -29,6 +29,11 @@
 #include <fcntl.h>
 #include <version.h>
 
+/* Include Hurd's errno.h file, but don't include glue-include/hurd/errno.h,
+   since it #undef's the errno macro. */
+#define _HACK_ERRNO_H
+#include <errno.h>
+
 #include <linux/netdevice.h>
 #include <linux/inet.h>
 
@@ -333,6 +338,45 @@ main (int argc,
 					    0, 0, 0);
   return 0;
 }
+
+void
+pfinet_bind (int portclass, const char *name)
+{
+  struct trivfs_control *cntl;
+  error_t err = 0;
+  mach_port_t right;
+  file_t file = file_name_lookup (name, O_CREAT|O_NOTRANS, 0666);
+
+  if (file == MACH_PORT_NULL)
+    err = errno;
+
+  if (! err) {
+    trivfs_protid_portclasses[portclass] =
+      ports_create_class (trivfs_clean_protid, 0);
+    trivfs_cntl_portclasses[portclass] =
+      ports_create_class (trivfs_clean_cntl, 0);
+
+    err = trivfs_create_control (file, trivfs_cntl_portclasses[portclass],
+				 pfinet_bucket, 
+				 trivfs_protid_portclasses[portclass], 
+				 pfinet_bucket, &cntl);
+  }
+
+  if (! err)
+    {
+      right = ports_get_send_right (cntl);
+      err = file_set_translator (file, 0, FS_TRANS_EXCL | FS_TRANS_SET,
+				 0, 0, 0, right, MACH_MSG_TYPE_COPY_SEND);
+      mach_port_deallocate (mach_task_self (), right);
+    }
+  
+  if (err)
+    error (1, err, name);
+
+  ports_port_deref (cntl);
+
+}
+
 
 void
 trivfs_modify_stat (struct trivfs_protid *cred,
