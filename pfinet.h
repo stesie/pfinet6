@@ -92,4 +92,19 @@ void clean_socketport (void *);
 typedef struct sock_user *sock_user_t;
 typedef struct sock_addr *sock_addr_t;
 
+/* pfinet6 port classes. */
+enum {
+  PORTCLASS_INET,
+  PORTCLASS_INET6,
+};
+
+extern struct port_class *trivfs_protid_portclasses[];
+extern int trivfs_protid_nportclasses;
+
+extern struct port_class *trivfs_cntl_portclasses[2];
+extern int trivfs_cntl_nportclasses;
+
+/* Which portclass to install on the bootstrap port. */
+extern int pfinet_bootstrap_portclass;
+
 #endif

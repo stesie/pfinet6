@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 1995,96,97,99,2000,02 Free Software Foundation, Inc.
+   Copyright (C) 1995,96,97,99,2000,02,07 Free Software Foundation, Inc.
    Written by Michael I. Bushnell, p/BSG.
 
    This file is part of the GNU Hurd.
@@ -43,10 +43,15 @@ int trivfs_support_read = 1;
 int trivfs_support_write = 1;
 int trivfs_support_exec = 0;
 int trivfs_allow_open = O_READ | O_WRITE;
-struct port_class *trivfs_protid_portclasses[1];
-int trivfs_protid_nportclasses = 1;
-struct port_class *trivfs_cntl_portclasses[1];
-int trivfs_cntl_nportclasses = 1;
+
+struct port_class *trivfs_protid_portclasses[2];
+int trivfs_protid_nportclasses = 2;
+
+struct port_class *trivfs_cntl_portclasses[2];
+int trivfs_cntl_nportclasses = 2;
+
+/* Which portclass to install on the bootstrap port, default to IPv4. */
+int pfinet_bootstrap_portclass = PORTCLASS_INET;
 
 struct port_class *shutdown_notify_class;
 
@@ -235,8 +240,6 @@ main (int argc,
   struct stat st;
 
   pfinet_bucket = ports_create_bucket ();
-  trivfs_protid_portclasses[0] = ports_create_class (trivfs_clean_protid, 0);
-  trivfs_cntl_portclasses[0] = ports_create_class (trivfs_clean_cntl, 0);
   addrport_class = ports_create_class (clean_addrport, 0);
   socketport_class = ports_create_class (clean_socketport, 0);
   trivfs_fsid = getpid ();
@@ -281,6 +284,16 @@ main (int argc,
      (And when not sucessful, it never returns.)  */
   argp_parse (&pfinet_argp, argc, argv, 0,0,0);
 
+  /* Create portclass to install on the bootstrap port. */
+  if(trivfs_protid_portclasses[pfinet_bootstrap_portclass]
+     != MACH_PORT_NULL)
+    error(1, 0, "No portclass left to assign to bootstrap port");
+
+  trivfs_protid_portclasses[pfinet_bootstrap_portclass] =
+    ports_create_class (trivfs_clean_protid, 0);
+  trivfs_cntl_portclasses[pfinet_bootstrap_portclass] =
+    ports_create_class (trivfs_clean_cntl, 0);
+
   /* Ask init to tell us when the system is going down,
      so we can try to be friendly to our correspondents on the network.  */
   arrange_shutdown_notification ();
@@ -291,8 +304,10 @@ main (int argc,
     error (1, 0, "Must be started as a translator");
 
   err = trivfs_startup (bootstrap, 0,
-			trivfs_cntl_portclasses[0], pfinet_bucket,
-			trivfs_protid_portclasses[0], pfinet_bucket,
+			trivfs_cntl_portclasses[pfinet_bootstrap_portclass],
+			pfinet_bucket,
+			trivfs_protid_portclasses[pfinet_bootstrap_portclass],
+			pfinet_bucket, 
 			&pfinetctl);
 
   if (err)
