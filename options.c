@@ -38,6 +38,7 @@
 #include <linux/rtnetlink.h>
 #include <net/route.h>
 #include <net/ip_fib.h>
+#include <net/addrconf.h>
 
 /* Our interface to the set of devices.  */
 extern error_t find_device (char *name, struct device **device);
