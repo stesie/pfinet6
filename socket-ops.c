@@ -299,7 +299,7 @@ S_socket_create_address (mach_port_t server,
   struct sock_addr *addrstruct;
   const struct sockaddr *const sa = (void *) data;
 
-  if (sockaddr_type != AF_INET)
+  if (sockaddr_type != AF_INET && sockaddr_type != AF_INET6)
     return EAFNOSUPPORT;
   if (sa->sa_family != sockaddr_type
       || data_len < offsetof (struct sockaddr, sa_data))
