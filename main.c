@@ -289,48 +289,45 @@ main (int argc,
      (And when not sucessful, it never returns.)  */
   argp_parse (&pfinet_argp, argc, argv, 0,0,0);
 
-  /* Create portclass to install on the bootstrap port. */
-  if(trivfs_protid_portclasses[pfinet_bootstrap_portclass]
-     != MACH_PORT_NULL)
-    error(1, 0, "No portclass left to assign to bootstrap port");
-
-  trivfs_protid_portclasses[pfinet_bootstrap_portclass] =
-    ports_create_class (trivfs_clean_protid, 0);
-  trivfs_cntl_portclasses[pfinet_bootstrap_portclass] =
-    ports_create_class (trivfs_clean_cntl, 0);
-
-  /* Ask init to tell us when the system is going down,
-     so we can try to be friendly to our correspondents on the network.  */
-  arrange_shutdown_notification ();
-
-  /* Talk to parent and link us in.  */
   task_get_bootstrap_port (mach_task_self (), &bootstrap);
-  if (bootstrap == MACH_PORT_NULL)
-    error (1, 0, "Must be started as a translator");
 
-  err = trivfs_startup (bootstrap, 0,
-			trivfs_cntl_portclasses[pfinet_bootstrap_portclass],
-			pfinet_bucket,
-			trivfs_protid_portclasses[pfinet_bootstrap_portclass],
-			pfinet_bucket, 
-			&pfinetctl);
+  pfinet_owner = pfinet_group = 0;
 
-  if (err)
-    error (1, err, "contacting parent");
+  if (bootstrap != MACH_PORT_NULL) {
+    /* Create portclass to install on the bootstrap port. */
+    if(trivfs_protid_portclasses[pfinet_bootstrap_portclass]
+       != MACH_PORT_NULL)
+      error(1, 0, "No portclass left to assign to bootstrap port");
+    
+    trivfs_protid_portclasses[pfinet_bootstrap_portclass] =
+      ports_create_class (trivfs_clean_protid, 0);
+    trivfs_cntl_portclasses[pfinet_bootstrap_portclass] =
+      ports_create_class (trivfs_clean_cntl, 0);
 
-  /* Initialize status from underlying node.  */
-  err = io_stat (pfinetctl->underlying, &st);
-  if (err)
-    {
-      /* We cannot stat the underlying node.  Fallback to the defaults.  */
-      pfinet_owner = pfinet_group = 0;
-      err = 0;
-    }
+    /* Ask init to tell us when the system is going down,
+       so we can try to be friendly to our correspondents on the network.  */
+    arrange_shutdown_notification ();
+
+    /* Talk to parent and link us in.  */
+    err = trivfs_startup (bootstrap, 0,
+			  trivfs_cntl_portclasses[pfinet_bootstrap_portclass],
+			  pfinet_bucket, trivfs_protid_portclasses
+			  [pfinet_bootstrap_portclass], pfinet_bucket, 
+			  &pfinetctl);
+
+    if (err)
+      error (1, err, "contacting parent");
+
+    /* Initialize status from underlying node.  */
+    err = io_stat (pfinetctl->underlying, &st);
+    if (! err)
+      {
+	pfinet_owner = st.st_uid;
+	pfinet_group = st.st_gid;
+      }
+  }
   else
-    {
-      pfinet_owner = st.st_uid;
-      pfinet_group = st.st_gid;
-    }
+    fprintf(stderr, "pfinet6 is usually started as a translator.\n");
 
   /* Launch */
   ports_manage_port_operations_multithread (pfinet_bucket,
