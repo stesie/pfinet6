@@ -333,7 +333,9 @@ parse_opt (int opt, char *arg, struct argp_state *state)
       for (in = h->interfaces; in < h->interfaces + h->num_interfaces; in++)
 	{
 #ifdef CONFIG_IPV6
-	  struct inet6_dev *idev = ipv6_find_idev(in->device);
+	  struct inet6_dev *idev = NULL;
+	  if (in->device)
+	    idev = ipv6_find_idev(in->device);
 #endif
 
 	  if (in->address != INADDR_NONE || in->netmask != INADDR_NONE)
