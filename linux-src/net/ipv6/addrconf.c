@@ -874,7 +874,10 @@ err_exit:
 /*
  *	Manual configuration of address on an interface
  */
-static int inet6_addr_add(int ifindex, struct in6_addr *pfx, int plen)
+#ifndef _HURD_
+static 
+#endif
+int inet6_addr_add(int ifindex, struct in6_addr *pfx, int plen)
 {
 	struct inet6_ifaddr *ifp;
 	struct inet6_dev *idev;
@@ -905,7 +908,10 @@ static int inet6_addr_add(int ifindex, struct in6_addr *pfx, int plen)
 	return -ENOBUFS;
 }
 
-static int inet6_addr_del(int ifindex, struct in6_addr *pfx, int plen)
+#ifndef _HURD_
+static 
+#endif
+int inet6_addr_del(int ifindex, struct in6_addr *pfx, int plen)
 {
 	struct inet6_ifaddr *ifp;
 	struct inet6_dev *idev;
