@@ -55,6 +55,8 @@ extern void inquire_device (struct device *dev, uint32_t *addr,
 
 /* addrconf.c */
 extern struct inet6_dev *ipv6_find_idev (struct device *dev);
+extern int inet6_addr_add (int ifindex, struct in6_addr *pfx, int plen);
+extern int inet6_addr_del (int ifindex, struct in6_addr *pfx, int plen);
 
 
 /* Pfinet options.  Used for both startup and runtime.  */
@@ -68,6 +70,7 @@ static const struct argp_option options[] =
   {"gateway",   'g', "ADDRESS", 0, "Set the default gateway"},
   {"ipv4",      '4', "NAME",    0, "Put active IPv4 translator on NAME"},
   {"ipv6",      '6', "NAME",    0, "Put active IPv6 translator on NAME"},
+  {"address6",  'A', "ADDR/LEN",0, "Set the global IPv6 address"},
   {"shutdown",  's', 0,         0, "Shut it down"},
   {0}
 };
@@ -82,8 +85,12 @@ struct parse_interface
   /* The network interface in question.  */
   struct device *device;
 
-  /* New values to apply to it.  */
+  /* New values to apply to it. (IPv4) */
   uint32_t address, netmask, peer, gateway;
+
+  /* New IPv6 configuration to apply. */
+  struct inet6_ifaddr address6;
+  struct in6_addr gateway6;
 };
 
 /* Used to hold data during argument parsing.  */
@@ -116,6 +123,9 @@ parse_hook_add_interface (struct parse_hook *h)
   h->curint->netmask = INADDR_NONE;
   h->curint->peer = INADDR_NONE;
   h->curint->gateway = INADDR_NONE;
+
+  memset (&h->curint->address6, 0, sizeof (struct inet6_ifaddr));
+  memset (&h->curint->gateway6, 0, sizeof (struct in6_addr));
   return 0;
 }
 
@@ -154,6 +164,7 @@ parse_opt (int opt, char *arg, struct argp_state *state)
     {
       struct parse_interface *in;
       uint32_t gateway;
+      char *ptr;
 
     case 'i':
       /* An interface.  */
@@ -215,6 +226,31 @@ parse_opt (int opt, char *arg, struct argp_state *state)
       pfinet_bind (PORTCLASS_INET6, arg);
       break;
 
+    case 'A':
+      if ((ptr = strchr (arg, '/'))) 
+	{
+	  h->curint->address6.prefix_len = atoi (ptr + 1);
+	  if (h->curint->address6.prefix_len > 128) 
+	    FAIL (EINVAL, 1, 0, "%s: The prefix-length is invalid", arg);
+
+	  *ptr = 0;
+	}
+      else
+	{
+	  h->curint->address6.prefix_len = 64;
+	  fprintf (stderr, "No prefix-length given, defaulting to %s/64.\n",
+		   arg);
+	}
+
+      if (inet_pton (AF_INET6, arg, &h->curint->address6.addr) <= 0)
+	PERR (EINVAL, "Malformed address");
+
+      if (IN6_IS_ADDR_MULTICAST (&h->curint->address6.addr))
+	FAIL (EINVAL, 1, 0, "%s: Cannot set interface address to "
+	      "multicast address", arg);
+
+      break;
+
     case ARGP_KEY_INIT:
       /* Initialize our parsing state.  */
       h = malloc (sizeof (struct parse_hook));
@@ -267,16 +303,43 @@ parse_opt (int opt, char *arg, struct argp_state *state)
       __mutex_lock (&global_lock);
 
       for (in = h->interfaces; in < h->interfaces + h->num_interfaces; in++)
-	if (in->address != INADDR_NONE || in->netmask != INADDR_NONE)
-	  {
-	    err = configure_device (in->device, in->address, in->netmask,
-				    in->peer, INADDR_NONE);
-	    if (err)
-	      {
-		__mutex_unlock (&global_lock);
-		FAIL (err, 16, 0, "cannot configure interface");
-	      }
-	  }
+	{
+#ifdef CONFIG_IPV6
+	  struct inet6_dev *idev = ipv6_find_idev(in->device);
+#endif
+
+	  if (in->address != INADDR_NONE || in->netmask != INADDR_NONE)
+	    {
+	      err = configure_device (in->device, in->address, in->netmask,
+				      in->peer, INADDR_NONE);
+	      if (err)
+		{
+		  __mutex_unlock (&global_lock);
+		  FAIL (err, 16, 0, "cannot configure interface");
+		}
+	    }
+
+#ifdef CONFIG_IPV6
+	  if (!idev)
+	    continue;
+
+	  if (!IN6_IS_ADDR_UNSPECIFIED (&in->address6.addr))
+	    {
+	      /* First let's remove all non-local addresses. */
+	      struct inet6_ifaddr *ifa = idev->addr_list;
+	      do 
+		if (!IN6_IS_ADDR_LINKLOCAL (&ifa->addr)
+		    && !IN6_IS_ADDR_SITELOCAL (&ifa->addr))
+		  inet6_addr_del (in->device->ifindex, &ifa->addr,
+				  ifa->prefix_len);
+	      while ((ifa = ifa->if_next));
+
+	      /* Now assign the new address */
+	      inet6_addr_add (in->device->ifindex, &in->address6.addr,
+			      in->address6.prefix_len);
+	    }
+#endif /* CONFIG_IPV6 */
+	}
 
       /* Set the default gateway.  This code is cobbled together from what
 	 the SIOCADDRT ioctl code does, and from the apparent functionality
