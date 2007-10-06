@@ -51,6 +51,10 @@ extern error_t configure_device (struct device *dev, uint32_t addr,
 extern void inquire_device (struct device *dev, uint32_t *addr,
 			    uint32_t *netmask, uint32_t *peer,
 			    uint32_t *broadcast);
+
+/* addrconf.c */
+extern struct inet6_dev *ipv6_find_idev (struct device *dev);
+
 
 /* Pfinet options.  Used for both startup and runtime.  */
 static const struct argp_option options[] =
@@ -386,6 +390,23 @@ trivfs_append_args (struct trivfs_control *fsys, char **argz, size_t *argz_len)
 	ADD_ADDR_OPT ("gateway", FIB_RES_GW (res));
 
 #undef ADD_ADDR_OPT
+
+#ifdef CONFIG_IPV6
+      struct inet6_dev *idev = ipv6_find_idev(dev);
+      if (idev)
+	{
+	  struct inet6_ifaddr *ifa = idev->addr_list;
+	  static char addr_buf[INET6_ADDRSTRLEN];
+
+	  do 
+	    {
+	      inet_ntop (AF_INET6, &ifa->addr, addr_buf, INET6_ADDRSTRLEN);
+	      ADD_OPT ("--address6=%s/%d", addr_buf, ifa->prefix_len);
+	    }
+	  while ((ifa = ifa->if_next));
+	}
+#endif /* CONFIG_IPV6 */
+
 #undef ADD_OPT
 
       return err;
