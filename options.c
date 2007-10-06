@@ -38,6 +38,7 @@
 #include <linux/rtnetlink.h>
 #include <net/route.h>
 #include <net/ip_fib.h>
+#include <net/ip6_fib.h>
 #include <net/addrconf.h>
 
 /* Our interface to the set of devices.  */
@@ -396,14 +397,31 @@ trivfs_append_args (struct trivfs_control *fsys, char **argz, size_t *argz_len)
       if (idev)
 	{
 	  struct inet6_ifaddr *ifa = idev->addr_list;
+	  struct in6_addr daddr;
 	  static char addr_buf[INET6_ADDRSTRLEN];
 
+	  /* Look for IPv6 default route (we use the first ifa->addr as
+	     source address), but don't yet push it to the option stack. */
+	  memset (&daddr, 0, sizeof(daddr));
+	  struct fib6_node *fib = fib6_lookup
+	    (&ip6_routing_table, &daddr, &ifa->addr);
+	  struct rt6_info *rt6i = fib->leaf;
+	  
+	  /* Push all IPv6 addresses assigned to the interface. */
 	  do 
 	    {
 	      inet_ntop (AF_INET6, &ifa->addr, addr_buf, INET6_ADDRSTRLEN);
 	      ADD_OPT ("--address6=%s/%d", addr_buf, ifa->prefix_len);
 	    }
 	  while ((ifa = ifa->if_next));
+
+	  /* Last not least push --gateway6 option. */
+	  if(rt6i->rt6i_dev == dev) 
+	    {
+	      inet_ntop (AF_INET6, &rt6i->rt6i_gateway, addr_buf,
+			 INET6_ADDRSTRLEN);
+	      ADD_OPT ("--gateway6=%s", addr_buf);
+	    }
 	}
 #endif /* CONFIG_IPV6 */
 
