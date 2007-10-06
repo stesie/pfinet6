@@ -247,7 +247,10 @@ static struct inet6_dev * ipv6_add_dev(struct device *dev)
 	return ndev;
 }
 
-static struct inet6_dev * ipv6_find_idev(struct device *dev)
+#ifndef _HURD_
+static 
+#endif
+struct inet6_dev * ipv6_find_idev(struct device *dev)
 {
 	struct inet6_dev *idev;
 
