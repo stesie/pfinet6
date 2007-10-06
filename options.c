@@ -37,8 +37,10 @@
 #include <linux/route.h>
 #include <linux/rtnetlink.h>
 #include <net/route.h>
+#include <net/sock.h>
 #include <net/ip_fib.h>
 #include <net/ip6_fib.h>
+#include <net/ip6_route.h>
 #include <net/addrconf.h>
 
 /* Our interface to the set of devices.  */
@@ -71,6 +73,7 @@ static const struct argp_option options[] =
   {"ipv4",      '4', "NAME",    0, "Put active IPv4 translator on NAME"},
   {"ipv6",      '6', "NAME",    0, "Put active IPv6 translator on NAME"},
   {"address6",  'A', "ADDR/LEN",0, "Set the global IPv6 address"},
+  {"gateway6",  'G', "ADDRESS", 0, "Set the IPv6 default gateway"},
   {"shutdown",  's', 0,         0, "Shut it down"},
   {0}
 };
@@ -164,7 +167,10 @@ parse_opt (int opt, char *arg, struct argp_state *state)
     {
       struct parse_interface *in;
       uint32_t gateway;
+#ifdef CONFIG_IPV6
+      struct parse_interface *gw6_in;
       char *ptr;
+#endif
 
     case 'i':
       /* An interface.  */
@@ -248,7 +254,15 @@ parse_opt (int opt, char *arg, struct argp_state *state)
       if (IN6_IS_ADDR_MULTICAST (&h->curint->address6.addr))
 	FAIL (EINVAL, 1, 0, "%s: Cannot set interface address to "
 	      "multicast address", arg);
+      break;
 
+    case 'G':
+      if (inet_pton (AF_INET6, arg, &h->curint->gateway6) <= 0)
+	PERR (EINVAL, "Malformed gateway");
+
+      if (IN6_IS_ADDR_MULTICAST (&h->curint->gateway6))
+	FAIL (EINVAL, 1, 0, "%s: Cannot set gateway to "
+	      "multicast address", arg);
       break;
 
     case ARGP_KEY_INIT:
@@ -289,15 +303,29 @@ parse_opt (int opt, char *arg, struct argp_state *state)
 #endif
 
       gateway = INADDR_NONE;
+#ifdef CONFIG_IPV6
+      gw6_in = NULL;
+#endif
       for (in = h->interfaces; in < h->interfaces + h->num_interfaces; in++)
-	if (in->gateway != INADDR_NONE)
-	  {
-	    if (gateway != INADDR_NONE)
-	      FAIL (err, 15, 0, "Cannot have multiple default gateways");
-	    gateway = in->gateway;
-	    in->gateway = INADDR_NONE;
-	  }
+	{
+	  if (in->gateway != INADDR_NONE)
+	    {
+	      if (gateway != INADDR_NONE)
+		FAIL (err, 15, 0, "Cannot have multiple default gateways");
+	      gateway = in->gateway;
+	      in->gateway = INADDR_NONE;
+	    }
 
+#ifdef CONFIG_IPV6
+	  if (!IN6_IS_ADDR_UNSPECIFIED (&in->gateway6))
+	    {
+	      if (gw6_in != NULL)
+		FAIL (err, 15, 0, "Cannot have multiple IPv6 "
+		      "default gateways");
+	      gw6_in = in;
+	    }
+#endif
+	}
       /* Successfully finished parsing, return a result.  */
 
       __mutex_lock (&global_lock);
@@ -396,6 +424,13 @@ parse_opt (int opt, char *arg, struct argp_state *state)
 	      }
 	  }
       }
+
+      /* Set IPv6 default router. */
+#ifdef CONFIG_IPV6
+      rt6_purge_dflt_routers (0);
+      if (gw6_in)
+	rt6_add_dflt_router (&gw6_in->gateway6, gw6_in->device);
+#endif       
 
       __mutex_unlock (&global_lock);
 
