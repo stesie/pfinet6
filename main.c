@@ -326,8 +326,17 @@ main (int argc,
 	pfinet_group = st.st_gid;
       }
   }
-  else
-    fprintf(stderr, "pfinet6 is usually started as a translator.\n");
+  else { /* no bootstrap port. */
+    int i;
+    /* Check that at least one portclass has been bound, 
+       error out otherwise. */
+    for (i = 0; i < trivfs_protid_nportclasses; i ++)
+      if (trivfs_protid_portclasses[i] != MACH_PORT_NULL)
+	break;
+
+    if (i == trivfs_protid_nportclasses)
+      error (1, 0, "should be started as a translator.\n");
+  }
 
   /* Launch */
   ports_manage_port_operations_multithread (pfinet_bucket,
