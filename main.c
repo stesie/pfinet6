@@ -304,10 +304,6 @@ main (int argc,
     trivfs_cntl_portclasses[pfinet_bootstrap_portclass] =
       ports_create_class (trivfs_clean_cntl, 0);
 
-    /* Ask init to tell us when the system is going down,
-       so we can try to be friendly to our correspondents on the network.  */
-    arrange_shutdown_notification ();
-
     /* Talk to parent and link us in.  */
     err = trivfs_startup (bootstrap, 0,
 			  trivfs_cntl_portclasses[pfinet_bootstrap_portclass],
@@ -337,6 +333,10 @@ main (int argc,
     if (i == trivfs_protid_nportclasses)
       error (1, 0, "should be started as a translator.\n");
   }
+
+  /* Ask init to tell us when the system is going down,
+     so we can try to be friendly to our correspondents on the network.  */
+  arrange_shutdown_notification ();
 
   /* Launch */
   ports_manage_port_operations_multithread (pfinet_bucket,
