@@ -71,9 +71,11 @@ static const struct argp_option options[] =
   {"peer",      'p', "ADDRESS", 0, "Set the peer address"},
   {"gateway",   'g', "ADDRESS", 0, "Set the default gateway"},
   {"ipv4",      '4', "NAME",    0, "Put active IPv4 translator on NAME"},
+#ifdef CONFIG_IPV6  
   {"ipv6",      '6', "NAME",    0, "Put active IPv6 translator on NAME"},
   {"address6",  'A', "ADDR/LEN",0, "Set the global IPv6 address"},
   {"gateway6",  'G', "ADDRESS", 0, "Set the IPv6 default gateway"},
+#endif
   {"shutdown",  's', 0,         0, "Shut it down"},
   {0}
 };
@@ -91,9 +93,11 @@ struct parse_interface
   /* New values to apply to it. (IPv4) */
   uint32_t address, netmask, peer, gateway;
 
+#ifdef CONFIG_IPV6
   /* New IPv6 configuration to apply. */
   struct inet6_ifaddr address6;
   struct in6_addr gateway6;
+#endif
 };
 
 /* Used to hold data during argument parsing.  */
@@ -127,8 +131,11 @@ parse_hook_add_interface (struct parse_hook *h)
   h->curint->peer = INADDR_NONE;
   h->curint->gateway = INADDR_NONE;
 
+#ifdef CONFIG_IPV6
   memset (&h->curint->address6, 0, sizeof (struct inet6_ifaddr));
   memset (&h->curint->gateway6, 0, sizeof (struct in6_addr));
+#endif
+
   return 0;
 }
 
@@ -228,6 +235,7 @@ parse_opt (int opt, char *arg, struct argp_state *state)
       pfinet_bootstrap_portclass = PORTCLASS_INET6;
       break;
 
+#ifdef CONFIG_IPV6
     case '6':
       pfinet_bind (PORTCLASS_INET6, arg);
       break;
@@ -264,6 +272,7 @@ parse_opt (int opt, char *arg, struct argp_state *state)
 	FAIL (EINVAL, 1, 0, "%s: Cannot set gateway to "
 	      "multicast address", arg);
       break;
+#endif /* CONFIG_IPV6 */
 
     case ARGP_KEY_INIT:
       /* Initialize our parsing state.  */
