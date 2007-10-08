@@ -17,7 +17,7 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
 
-dir		:= pfinet6
+dir		:= pfinet
 makemode	:= server
 
 core-srcs	:= datagram.c						      \
@@ -101,7 +101,7 @@ ASMHEADERS=bitops.h segment.h system.h
 
 HURDLIBS=trivfs fshelp threads ports ihash shouldbeinlibc iohelp
 
-target = pfinet6
+target = pfinet
 
 include ../Makeconf
 
@@ -114,7 +114,7 @@ CPPFLAGS += -imacros $(srcdir)/config.h		\
 	    -I$(srcdir)/linux-src/include
 
 # Don't ask...  We use Linux code.  The problem was first noticed when
-# compiling `pfinet6' with GCC 4.2.
+# compiling `pfinet' with GCC 4.2.
 CFLAGS += -fno-strict-aliasing
 
 asm/checksum.h: ../config.status
