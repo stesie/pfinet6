@@ -343,7 +343,8 @@ parse_opt (int opt, char *arg, struct argp_state *state)
 	{
 #ifdef CONFIG_IPV6
 	  struct inet6_dev *idev = NULL;
-	  if (in->device)
+	  if (trivfs_protid_portclasses[PORTCLASS_INET6] != MACH_PORT_NULL
+	      && in->device)
 	    idev = ipv6_find_idev(in->device);
 #endif
 
@@ -438,9 +439,12 @@ parse_opt (int opt, char *arg, struct argp_state *state)
 
       /* Set IPv6 default router. */
 #ifdef CONFIG_IPV6
-      rt6_purge_dflt_routers (0);
-      if (gw6_in)
-	rt6_add_dflt_router (&gw6_in->gateway6, gw6_in->device);
+      if (trivfs_protid_portclasses[PORTCLASS_INET6] != MACH_PORT_NULL)
+	{
+	  rt6_purge_dflt_routers (0);
+	  if (gw6_in)
+	    rt6_add_dflt_router (&gw6_in->gateway6, gw6_in->device);
+	}
 #endif       
 
       __mutex_unlock (&global_lock);
@@ -502,7 +506,11 @@ trivfs_append_args (struct trivfs_control *fsys, char **argz, size_t *argz_len)
 #undef ADD_ADDR_OPT
 
 #ifdef CONFIG_IPV6
-      struct inet6_dev *idev = ipv6_find_idev(dev);
+      struct inet6_dev *idev = NULL;
+
+      if (trivfs_protid_portclasses[PORTCLASS_INET6] != MACH_PORT_NULL)
+	idev = ipv6_find_idev(dev);
+
       if (idev)
 	{
 	  struct inet6_ifaddr *ifa = idev->addr_list;

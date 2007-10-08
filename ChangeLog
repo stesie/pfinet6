@@ -4,7 +4,6 @@
 	set to 1.
 	* Makefile (ipv6-srcs): New variable.
 	(LINUXSRCS): Add ipv6-srcs.
-	(target): Set to pfinet6.
 	
 	* ethernet.c (ethernet_demuxer): Call skb_put instead of changing
 	skb->len directly, and thus now update skb->tail accordingly.
@@ -20,6 +19,7 @@
 	(trivfs_protid_nportclasses, trivfs_cntl_nportclasses): Set to 2.
 	(pfinet_bootstrap_portclass): New variable.
 	(pfinet_bind): New function.
+	(pfinet_active_ipv6) [CONFIG_IPV6]: New function.
 	(main) [CONFIG_IPV6]: Call inet6_proto_init.
 	(main): Reordered to allow pfinet to not be started as a
 	translator, if pfinet_bind is used.  If started as a translator,

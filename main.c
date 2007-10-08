@@ -37,10 +37,16 @@
 #include <linux/netdevice.h>
 #include <linux/inet.h>
 
+static void pfinet_activate_ipv6 (void);
+
 /* devinet.c */
 extern error_t configure_device (struct device *dev,
                                  uint32_t addr, uint32_t netmask,
 				 uint32_t peer, uint32_t broadcast);
+
+/* addrconf.c */
+extern int addrconf_notify(struct notifier_block *this, unsigned long event, 
+			   void * data);
 
 int trivfs_fstype = FSTYPE_MISC;
 int trivfs_fsid;
@@ -267,10 +273,6 @@ main (int argc,
 #endif
   inet_proto_init (0);
 
-#ifdef CONFIG_IPV6
-  inet6_proto_init (0);
-#endif
-
   /* This initializes the Linux network device layer, including
      initializing each device on the `dev_base' list.  For us,
      that means just loopback_dev, which will get fully initialized now.
@@ -298,6 +300,11 @@ main (int argc,
     if(trivfs_protid_portclasses[pfinet_bootstrap_portclass]
        != MACH_PORT_NULL)
       error(1, 0, "No portclass left to assign to bootstrap port");
+
+#ifdef CONFIG_IPV6
+    if (pfinet_bootstrap_portclass == PORTCLASS_INET6)
+      pfinet_activate_ipv6 ();
+#endif
     
     trivfs_protid_portclasses[pfinet_bootstrap_portclass] =
       ports_create_class (trivfs_clean_protid, 0);
@@ -345,6 +352,29 @@ main (int argc,
   return 0;
 }
 
+#ifdef CONFIG_IPV6
+static void
+pfinet_activate_ipv6 (void)
+{
+  inet6_proto_init (0);
+
+  /* Since we're registering the protocol after the devices have been
+     initialized, we need to care for the linking by ourselves. */
+  struct device *dev = dev_base;
+  
+  if (dev)
+    do
+      {
+	if (!(dev->flags & IFF_UP))
+	  continue;
+
+	addrconf_notify (NULL, NETDEV_REGISTER, dev);
+	addrconf_notify (NULL, NETDEV_UP, dev);
+      }
+    while ((dev = dev->next));
+}
+#endif /* CONFIG_IPV6 */
+
 void
 pfinet_bind (int portclass, const char *name)
 {
@@ -357,6 +387,14 @@ pfinet_bind (int portclass, const char *name)
     err = errno;
 
   if (! err) {
+    if (trivfs_protid_portclasses[portclass] != MACH_PORT_NULL)
+      error (1, 0, "Cannot bind one protocol to multiple nodes.\n");
+
+#ifdef CONFIG_IPV6
+    if (portclass == PORTCLASS_INET6)
+      pfinet_activate_ipv6 ();
+#endif
+
     trivfs_protid_portclasses[portclass] =
       ports_create_class (trivfs_clean_protid, 0);
     trivfs_cntl_portclasses[portclass] =
